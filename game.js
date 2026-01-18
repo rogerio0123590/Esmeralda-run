@@ -1,111 +1,104 @@
-// Game.js
+// Canvas
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// Classe do personagem
 class Personagem {
-    constructor(nome, corCabo, corOlhos) {
-        this.nome = nome;
-        this.corCabo = corCabo;
-        this.corOlhos = corOlhos;
-        this.posX = 100;
-        this.posY = 100;
-        this.velX = 0;
-        this.velY = 0;
-        this.lar = 50;
-        this.alt = 50;
-        this.gravidade = 0.5;
+    constructor() {
+        this.x = 100;
+        this.y = 100;
+        this.w = 50;
+        this.h = 50;
+
+        this.vx = 0;
+        this.vy = 0;
+
+        this.gravidade = 0.6;
         this.noChao = false;
     }
 
-    desenhar(ctx) {
-        ctx.fillStyle = this.corCabo;
-        ctx.fillRect(this.posX, this.posY, this.lar, this.alt);
-        ctx.fillStyle = this.corOlhos;
-        ctx.fillRect(this.posX + 10, this.posY + 10, 5, 5);
-    }
-
     atualizar() {
-        this.velY += this.gravidade;
-        this.posX += this.velX;
-        this.posY += this.velY;
+        this.vy += this.gravidade;
+        this.x += this.vx;
+        this.y += this.vy;
 
-        if (this.posY + this.alt > canvas.height - 50) {
-            this.posY = canvas.height - 50 - this.alt;
-            this.velY = 0;
+        const chao = canvas.height - 60;
+
+        if (this.y + this.h >= chao) {
+            this.y = chao - this.h;
+            this.vy = 0;
             this.noChao = true;
         } else {
             this.noChao = false;
         }
     }
 
+    desenhar() {
+        // Corpo
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+
+        // Olho
+        ctx.fillStyle = "green";
+        ctx.fillRect(this.x + 12, this.y + 12, 6, 6);
+    }
+
     pular() {
         if (this.noChao) {
-            this.velY = -10;
+            this.vy = -12;
         }
     }
-
-    moverEsq() {
-        this.velX = -5;
-    }
-
-    moverDir() {
-        this.velX = 5;
-    }
-
-    parar() {
-        this.velX = 0;
-    }
 }
 
-// Inicialização do jogo
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
-
-const personagem = new Personagem('Humano Loiro', 'yellow', 'green');
+// Instância do jogador
+const player = new Personagem();
 
 // Controles mobile
-const btnEsq = document.createElement('button');
-btnEsq.innerText = '←';
-btnEsq.style.position = 'absolute';
-btnEsq.style.left = '10px';
-btnEsq.style.bottom = '10px';
-btnEsq.style.width = '50px';
-btnEsq.style.height = '50px';
-document.body.appendChild(btnEsq);
+const controles = document.getElementById("controles");
 
-const btnDir = document.createElement('button');
-btnDir.innerText = '→';
-btnDir.style.position = 'absolute';
-btnDir.style.left = '70px';
-btnDir.style.bottom = '10px';
-btnDir.style.width = '50px';
-btnDir.style.height = '50px';
-document.body.appendChild(btnDir);
+function criarBotao(texto, left, right, acaoPressionar) {
+    const btn = document.createElement("button");
+    btn.innerText = texto;
 
-const btnPular = document.createElement('button');
-btnPular.innerText = 'Pular';
-btnPular.style.position = 'absolute';
-btnPular.style.right = '10px';
-btnPular.style.bottom = '10px';
-btnPular.style.width = '50px';
-btnPular.style.height = '50px';
-document.body.appendChild(btnPular);
+    if (left) btn.style.left = left;
+    if (right) btn.style.right = right;
 
-// Eventos
-btnEsq.addEventListener('touchstart', () => personagem.moverEsq());
-btnEsq.addEventListener('touchend', () => personagem.parar());
-btnDir.addEventListener('touchstart', () => personagem.moverDir());
-btnDir.addEventListener('touchend', () => personagem.parar());
-btnPular.addEventListener('touchstart', () => personagem.pular());
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        acaoPressionar();
+    });
 
-// Loop do jogo
-function update() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Desenha chão
-    ctx.fillStyle = 'brown';
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
-    personagem.atualizar();
-    personagem.desenhar(ctx);
-    requestAnimationFrame(update);
+    btn.addEventListener("touchend", () => {
+        player.vx = 0;
+    });
+
+    controles.appendChild(btn);
 }
 
-update();
+// Botões
+criarBotao("←", "10px", null, () => player.vx = -5);
+criarBotao("→", "80px", null, () => player.vx = 5);
+criarBotao("⬆", null, "10px", () => player.pular());
+
+// Loop do jogo
+function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Chão
+    ctx.fillStyle = "brown";
+    ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+
+    player.atualizar();
+    player.desenhar();
+
+    requestAnimationFrame(loop);
+}
+
+loop();
