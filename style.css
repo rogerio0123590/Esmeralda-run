@@ -1,0 +1,14 @@
+body {
+    margin: 0;
+    background-color: #f0f0f0;
+    touch-action: none; /* Para evitar zoom em mobile */
+}
+
+#gameCanvas {
+    border: 1px solid black;
+}
+
+button {
+    font-size: 20px;
+    touch-action: manipulation; /* Para evitar problemas de scroll em mobile */
+}
